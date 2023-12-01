@@ -163,23 +163,25 @@ type Props = {
 
 function DisplayMessage({ message, setMessage, severity }: Props) {
   return (
-    <Collapse in={Boolean(message)}>
-      <Alert
-        sx={{
-          mt: 2,
-          width: "50%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-        onClose={() => {
-          setMessage("");
-        }}
-        severity={severity}
-      >
-        {message}
-      </Alert>
-    </Collapse>
+    <Box sx={{ display: "flex", justifyContent: "center" }}>
+      <Collapse in={Boolean(message)} sx={{ width: "50%" }}>
+        <Alert
+          sx={{
+            mt: 2,
+
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onClose={() => {
+            setMessage("");
+          }}
+          severity={severity}
+        >
+          {message}
+        </Alert>
+      </Collapse>
+    </Box>
   );
 }
 
