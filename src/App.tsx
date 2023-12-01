@@ -20,8 +20,8 @@ import timezone from "dayjs/plugin/timezone";
 
 const usersData: User[] = [
   { id: "1", name: "Jon Doe" },
-  { id: "2", name: "Tim" },
-  { id: "3", name: "Tom" },
+  { id: "2", name: "Tim Ali" },
+  { id: "3", name: "Tom Eric" },
 ];
 
 type User = {
@@ -93,8 +93,6 @@ function App() {
       );
     }
   };
-
-  console.log(value?.format());
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={tz.locale}>
