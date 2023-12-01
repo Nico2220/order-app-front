@@ -11,7 +11,7 @@ import {
   Collapse,
 } from "@mui/material/";
 
-import { LocalizationProvider } from "@mui/x-date-pickers";
+import { DateField, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -36,11 +36,13 @@ const BASE_URL = "http://localhost:3001";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const tz = Intl.DateTimeFormat().resolvedOptions();
 
 function App() {
   const [userId, setUserId] = useState("1");
-  const [value, setValue] = React.useState<Dayjs | null>(dayjs().tz(tz));
+  const [value, setValue] = React.useState<Dayjs | null>(
+    dayjs().tz(tz.timeZone)
+  );
   const [order, setOder] = useState<Order>();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -58,7 +60,7 @@ function App() {
   const handleClick = async () => {
     try {
       const response = await fetch(
-        `${BASE_URL}/order/${userId}/${value?.tz(tz)}`,
+        `${BASE_URL}/order/${userId}/${value?.tz(tz.timeZone)}`,
         {
           method: "post",
         }
@@ -80,20 +82,22 @@ function App() {
     if (lastOrder && lastOrder.users.length === 1) {
       setMessage(
         `An order has been initiated at ${dayjs(lastOrder.orderDate).format(
-          "DD-MM-YYYY HH:mm"
+          "DD-MM-YYYY HH:00"
         )}, There is one empty seat`
       );
     } else if (lastOrder && lastOrder.users.length === 2) {
       setMessage(
         `Order at ${dayjs(lastOrder.orderDate).format(
-          "DD-MM-YYYY HH:mm"
+          "DD-MM-YYYY HH:00"
         )} is completed`
       );
     }
   };
 
+  console.log(value?.format());
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={tz.locale}>
       <Box sx={{ mt: 2, textAlign: "center" }}>
         <FormControl sx={{ mr: 2 }}>
           <InputLabel id="user-select-label">Users</InputLabel>
@@ -117,10 +121,12 @@ function App() {
           label="Calendar"
           value={value}
           onChange={(newValue) => setValue(newValue)}
-          views={["year", "month", "day", "hours", "minutes"]}
+          views={["year", "month", "day", "hours"]}
           minDateTime={value}
           ampm={false}
           disabled={order?.users.length === 1}
+          format="DD/MM/YY HH:00"
+          timezone={tz.timeZone}
         />
 
         <Button variant="contained" onClick={handleClick}>
