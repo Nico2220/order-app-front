@@ -9,6 +9,7 @@ import {
   Select,
   Alert,
   Collapse,
+  Typography,
 } from "@mui/material/";
 
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -74,28 +75,42 @@ function App() {
       const table = (await response.json()) as { orders: Order[] };
       const lastOder = table.orders[table.orders.length - 1];
       setOder(lastOder);
-      updateMessage(lastOder);
     } catch (err) {}
   };
 
-  const updateMessage = (lastOrder: Order) => {
+  useEffect(() => {
+    if (!order) return;
+    updateMessage();
+  }, [user, order, value]);
+
+  const updateMessage = () => {
+    let lastOrder = order;
     if (lastOrder && lastOrder.users.length === 1) {
       setMessage(
-        `An order has been initiated at ${dayjs(lastOrder.orderDate)
+        `Order has been initiated at ${dayjs(lastOrder.orderDate)
           .tz(user.timezone)
-          .format("DD-MM-YYYY HH:00")}, There is one empty seat`
+          .format("DD-MM-YYYY HH:00")}, There is one empty seat left`
       );
     } else if (lastOrder && lastOrder.users.length === 2) {
       setMessage(
-        `Order at ${dayjs(lastOrder.orderDate).format(
-          "DD-MM-YYYY HH:00"
-        )} is completed`
+        `Order at ${dayjs(lastOrder.orderDate)
+          .tz(user.timezone)
+          .format(
+            "DD-MM-YYYY HH:00"
+          )} is closed, The next available date is ${value
+          ?.tz(user.timezone)
+          .format("DD-MM-YYYY HH:00")}`
       );
     }
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Typography sx={{ textAlign: "center", mt: 2 }}>
+        When ever you shoose a user , It's kind of simulate the current logged
+        in user. The current logged in User is : <strong>{user.name}</strong>{" "}
+        with the timezone <strong>{user.timezone}</strong>
+      </Typography>
       <Box
         sx={{
           mt: 2,
@@ -107,6 +122,7 @@ function App() {
         <FormControl sx={{ mr: 2 }}>
           <InputLabel id="user-select-label">Users</InputLabel>
           <Select
+            size="medium"
             labelId="user-select-label"
             id="user"
             value={user.id}
@@ -136,7 +152,13 @@ function App() {
           timezone={user.timezone}
         />
 
-        <Button variant="contained" onClick={handleClick}>
+        <Button
+          variant="contained"
+          onClick={handleClick}
+          disabled={
+            order && order.users.length === 1 && order.users.includes(user.id)
+          }
+        >
           {order?.users.length === 1 ? "confirm Order" : "Initiate Order"}
         </Button>
       </Box>
