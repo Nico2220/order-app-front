@@ -96,7 +96,14 @@ function App() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ mt: 2, textAlign: "center" }}>
+      <Box
+        sx={{
+          mt: 2,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-end",
+        }}
+      >
         <FormControl sx={{ mr: 2 }}>
           <InputLabel id="user-select-label">Users</InputLabel>
           <Select
@@ -132,31 +139,31 @@ function App() {
         <Button variant="contained" onClick={handleClick}>
           {order?.users.length === 1 ? "confirm Order" : "Initiate Order"}
         </Button>
-
-        {order && order.users.length === 1 ? (
-          <DisplayMessage
-            message={message}
-            setMessage={setMessage}
-            severity="info"
-          />
-        ) : null}
-
-        {order && order.users.length === 2 ? (
-          <DisplayMessage
-            message={message}
-            setMessage={setMessage}
-            severity="success"
-          />
-        ) : null}
-
-        {error && (
-          <DisplayMessage
-            message={error}
-            setMessage={setError}
-            severity="error"
-          />
-        )}
       </Box>
+
+      {order && order.users.length === 1 ? (
+        <DisplayMessage
+          message={message}
+          setMessage={setMessage}
+          severity="info"
+        />
+      ) : null}
+
+      {order && order.users.length === 2 ? (
+        <DisplayMessage
+          message={message}
+          setMessage={setMessage}
+          severity="success"
+        />
+      ) : null}
+
+      {error && (
+        <DisplayMessage
+          message={error}
+          setMessage={setError}
+          severity="error"
+        />
+      )}
     </LocalizationProvider>
   );
 }
