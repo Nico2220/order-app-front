@@ -40,32 +40,38 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 function App() {
-  // const [userId, setUserId] = useState("1");
   const [user, setUser] = useState(usersData[0]);
   const [value, setValue] = React.useState<Dayjs | null>(
     dayjs().tz(user.timezone)
   );
+  const [minDateTime, setMinDateTime] = React.useState<Dayjs | null>(null);
   const [order, setOder] = useState<Order>();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchAvalaibleDate = async () => {
+    const fetchAvailableDate = async () => {
       const response = await fetch(
         `${BASE_URL}/available-date?timezone=${user.timezone}`
       );
-      const avalDate = (await response.json()) as { availableDate: string };
-      setValue(dayjs(avalDate.availableDate));
+      const availableDateJson = (await response.json()) as {
+        availableDate: string;
+      };
+      setValue(dayjs(availableDateJson.availableDate));
+      setMinDateTime(dayjs(availableDateJson.availableDate));
     };
 
-    fetchAvalaibleDate();
+    fetchAvailableDate();
   }, [user, order]);
 
   const handleClick = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/order/${user.id}/${value}`, {
-        method: "post",
-      });
+      const response = await fetch(
+        `${BASE_URL}/order/${user.id}/${value?.format()}`,
+        {
+          method: "post",
+        }
+      );
 
       if (!response.ok) {
         const errorJson = await response.json();
@@ -81,23 +87,22 @@ function App() {
   useEffect(() => {
     if (!order) return;
     updateMessage();
-  }, [user, order, value]);
+  }, [user, order, minDateTime]);
 
   const updateMessage = () => {
-    let lastOrder = order;
-    if (lastOrder && lastOrder.users.length === 1) {
+    if (order && order.users.length === 1) {
       setMessage(
-        `Order has been initiated at ${dayjs(lastOrder.orderDate)
+        `Order has been initiated at ${dayjs(order.orderDate)
           .tz(user.timezone)
           .format("DD-MM-YYYY HH:00")}, There is one empty seat left`
       );
-    } else if (lastOrder && lastOrder.users.length === 2) {
+    } else if (order && order.users.length === 2) {
       setMessage(
-        `Order at ${dayjs(lastOrder.orderDate)
+        `Order at ${dayjs(order.orderDate)
           .tz(user.timezone)
           .format(
             "DD-MM-YYYY HH:00"
-          )} is closed, The next available date is ${value
+          )} is closed, The next available date is ${minDateTime
           ?.tz(user.timezone)
           .format("DD-MM-YYYY HH:00")}`
       );
@@ -145,7 +150,7 @@ function App() {
           value={value}
           onChange={(newValue) => setValue(newValue)}
           views={["year", "month", "day", "hours"]}
-          minDateTime={value}
+          minDateTime={minDateTime}
           ampm={false}
           disabled={order?.users.length === 1}
           format="DD/MM/YY HH:00"
