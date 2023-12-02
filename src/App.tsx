@@ -11,7 +11,7 @@ import {
   Collapse,
 } from "@mui/material/";
 
-import { DateField, LocalizationProvider } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -19,14 +19,15 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
 const usersData: User[] = [
-  { id: "1", name: "Jon Doe" },
-  { id: "2", name: "Tim Ali" },
-  { id: "3", name: "Tom Eric" },
+  { id: "1", name: "Jon Doe", timezone: "Europe/Berlin" },
+  { id: "2", name: "Tim Ali", timezone: "Europe/Moscow" },
+  { id: "3", name: "Tom Eric", timezone: "America/Toronto" },
 ];
 
 type User = {
   id: string;
   name: string;
+  timezone: string;
 };
 type Order = {
   users: string[];
@@ -36,12 +37,12 @@ const BASE_URL = "http://localhost:3001";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-const tz = Intl.DateTimeFormat().resolvedOptions();
 
 function App() {
-  const [userId, setUserId] = useState("1");
+  // const [userId, setUserId] = useState("1");
+  const [user, setUser] = useState(usersData[0]);
   const [value, setValue] = React.useState<Dayjs | null>(
-    dayjs().tz(tz.timeZone)
+    dayjs().tz(user.timezone)
   );
   const [order, setOder] = useState<Order>();
   const [message, setMessage] = useState("");
@@ -49,22 +50,21 @@ function App() {
 
   useEffect(() => {
     const fetchAvalaibleDate = async () => {
-      const response = await fetch(`${BASE_URL}/available-date`);
+      const response = await fetch(
+        `${BASE_URL}/available-date?timezone=${user.timezone}`
+      );
       const avalDate = (await response.json()) as { availableDate: string };
       setValue(dayjs(avalDate.availableDate));
     };
 
     fetchAvalaibleDate();
-  }, [order]);
+  }, [user, order]);
 
   const handleClick = async () => {
     try {
-      const response = await fetch(
-        `${BASE_URL}/order/${userId}/${value?.tz(tz.timeZone)}`,
-        {
-          method: "post",
-        }
-      );
+      const response = await fetch(`${BASE_URL}/order/${user.id}/${value}`, {
+        method: "post",
+      });
 
       if (!response.ok) {
         const errorJson = await response.json();
@@ -81,9 +81,9 @@ function App() {
   const updateMessage = (lastOrder: Order) => {
     if (lastOrder && lastOrder.users.length === 1) {
       setMessage(
-        `An order has been initiated at ${dayjs(lastOrder.orderDate).format(
-          "DD-MM-YYYY HH:00"
-        )}, There is one empty seat`
+        `An order has been initiated at ${dayjs(lastOrder.orderDate)
+          .tz(user.timezone)
+          .format("DD-MM-YYYY HH:00")}, There is one empty seat`
       );
     } else if (lastOrder && lastOrder.users.length === 2) {
       setMessage(
@@ -95,16 +95,18 @@ function App() {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={tz.locale}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ mt: 2, textAlign: "center" }}>
         <FormControl sx={{ mr: 2 }}>
           <InputLabel id="user-select-label">Users</InputLabel>
           <Select
             labelId="user-select-label"
-            id="userId"
-            value={userId}
+            id="user"
+            value={user.id}
             label="Users"
-            onChange={(e) => setUserId(e.target.value as string)}
+            onChange={(e) => {
+              setUser(usersData[+e.target.value - 1]);
+            }}
           >
             {usersData.map((option) => (
               <MenuItem key={option.id} value={option.id}>
@@ -124,7 +126,7 @@ function App() {
           ampm={false}
           disabled={order?.users.length === 1}
           format="DD/MM/YY HH:00"
-          timezone={tz.timeZone}
+          timezone={user.timezone}
         />
 
         <Button variant="contained" onClick={handleClick}>
