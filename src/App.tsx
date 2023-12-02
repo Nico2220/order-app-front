@@ -197,7 +197,7 @@ function App() {
 
 type Props = {
   message: string;
-  setMessage: Function;
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
   severity: "error" | "info" | "warning" | "success";
 };
 
